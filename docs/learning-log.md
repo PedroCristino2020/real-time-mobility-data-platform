@@ -71,3 +71,37 @@ Each snapshot contains approximately 678 stations.
 - incremental snapshots
 - Python packages and relative imports
 - scheduled ingestion
+
+## 2026-10-02 — Silver Parquet and Gold metrics
+
+### What I implemented
+
+- Converted BiciMAD Silver data from JSON to Parquet using pandas and PyArrow.
+- Partitioned station status data by date.
+- Created the first Gold dataset for analytical use.
+- Joined station status data with station metadata.
+- Calculated the average bike availability rate for each station.
+- Converted the availability rate into a percentage.
+- Validated the resulting Gold dataset.
+
+### Gold dataset
+
+The Gold dataset contains one record per BiciMAD station with:
+
+- station ID
+- station name
+- station capacity
+- average availability rate
+- average availability percentage
+
+The resulting dataset contains 678 stations.
+
+### Concepts learned
+
+- Parquet
+- Data partitioning
+- Silver to Gold transformations
+- Dataset joins
+- Business metrics
+- Aggregations with pandas
+- Analytical datasets
