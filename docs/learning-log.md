@@ -105,3 +105,72 @@ The resulting dataset contains 678 stations.
 - Business metrics
 - Aggregations with pandas
 - Analytical datasets
+
+## 2026-10-04 — PySpark processing pipeline
+
+### What I implemented
+
+- Configured PySpark to run correctly on Windows.
+- Read the Silver BiciMAD Parquet dataset using PySpark.
+- Loaded station metadata from JSON using Spark.
+- Aggregated station data using `groupBy`, `avg` and `count`.
+- Calculated the average number of available bikes and docks per station.
+- Calculated the station availability rate.
+- Joined the aggregated data with station metadata using `join`.
+- Generated a Gold analytical dataset using PySpark.
+- Saved the Gold dataset as Parquet.
+- Added validation checks for the generated Gold dataset.
+
+### PySpark processing
+
+The PySpark pipeline reads the Silver BiciMAD dataset containing 8,136 records from 12 snapshots of 678 stations.
+
+For each station, the pipeline calculates:
+
+- Average available bikes.
+- Average available docks.
+- Number of snapshots.
+- Availability rate.
+- Availability percentage.
+
+The aggregated metrics are then joined with station metadata to include the station name and capacity.
+
+### Gold dataset
+
+The PySpark Gold dataset contains 678 records, one per station, with:
+
+- station ID
+- average available bikes
+- average available docks
+- snapshot count
+- availability rate
+- station name
+- capacity
+- availability percentage
+
+The Gold dataset is stored as Parquet at:
+
+`data/gold/bicimad/station_availability_spark`
+
+### Data validation
+
+The generated Gold dataset was validated using PySpark:
+
+- 678 Gold records.
+- 0 null station IDs.
+- 0 availability percentages outside the range 0–100%.
+- 12 snapshots per station.
+
+### Concepts learned
+
+- PySpark DataFrames
+- SparkSession
+- Reading and writing Parquet with Spark
+- `groupBy` and aggregations
+- `avg` and `count`
+- DataFrame joins
+- Derived metrics
+- Spark-based data validation
+- Silver → Gold transformations
+- Distributed data processing concepts
+- Running PySpark locally on Windows
