@@ -35,7 +35,7 @@ def main():
 
     # Station information: download only if it does not exist
     
-    station_information_path = os.path.join( OUTPUT_DIR, "station_information.json")
+    station_information_path = os.path.join(OUTPUT_DIR, "station_information.json")
 
     if os.path.exists(station_information_path):
         print("station_information already exists. Skipping download.")
@@ -49,10 +49,7 @@ def main():
 
     data = fetch_json(FEEDS["station_status"])
 
-    status_dir = os.path.join(
-        OUTPUT_DIR,
-        "station_status"
-    )
+    status_dir = os.path.join(OUTPUT_DIR, "station_status")
 
     os.makedirs(status_dir, exist_ok=True)
 

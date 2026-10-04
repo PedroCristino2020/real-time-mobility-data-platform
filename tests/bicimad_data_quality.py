@@ -31,7 +31,7 @@ def main():
             if key in station_snapshot_keys:
                 duplicate_station_snapshots += 1
 
-        station_snapshot_keys.add(key)
+            station_snapshot_keys.add(key)
 
         if record["num_bikes_available"] < 0:
             negative_bikes += 1
