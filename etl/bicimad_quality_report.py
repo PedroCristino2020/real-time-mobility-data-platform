@@ -20,6 +20,8 @@ def main():
     total_issues = sum(issues.values())
     print(f"\nTotal detected issues: {total_issues}")
 
+    return total_issues
+
 
 if __name__ == "__main__":
     main()
