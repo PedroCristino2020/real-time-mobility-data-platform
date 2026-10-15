@@ -2,7 +2,6 @@ import json
 
 from etl.bicimad_data_quality import validate_records
 
-
 INPUT_FILE = "data/silver/bicimad/station_status.json"
 
 

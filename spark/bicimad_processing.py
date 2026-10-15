@@ -1,6 +1,7 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import avg, count, col, round
 import os
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import avg, col, count, round
 
 INPUT_FILE = "data/silver/bicimad/station_status"
 

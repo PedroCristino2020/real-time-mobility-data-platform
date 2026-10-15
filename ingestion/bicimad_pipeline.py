@@ -1,7 +1,9 @@
+
 import time
 
-from .bicimad_ingestion import main
+import requests
 
+from .bicimad_ingestion import main
 
 INTERVAL_SECONDS = 5 * 60
 
@@ -13,7 +15,7 @@ def run():
         try:
             main()
             print("Ingestion completed successfully.")
-        except Exception as error:
+        except (requests.RequestException, ValueError, OSError) as error:
             print(f"Ingestion failed: {error}")
 
         print(f"Waiting {INTERVAL_SECONDS} seconds...")

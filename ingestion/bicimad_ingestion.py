@@ -1,9 +1,8 @@
-from datetime import datetime, timezone
 import json
 import os
+from datetime import UTC, datetime
 
 import requests
-
 
 BASE_URL = "https://madrid.publicbikesystem.net/customer/gbfs/v2/es"
 
@@ -31,7 +30,7 @@ def save_json(data, output_path):
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
 
     # Station information: download only if it does not exist
     
