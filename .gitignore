@@ -2,19 +2,25 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.ruff_cache/
 .venv/
 venv/
 
-# Environment variables
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
 
 # IDE
 .vscode/
+.idea/
 
-# OS
+# Operating system
 .DS_Store
+Thumbs.db
+Desktop.ini
 
-# Data
+# Local data
 data/
 *.csv
 *.json
@@ -22,3 +28,12 @@ data/
 
 # Logs
 *.log
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Temporary files
+*.tmp
+*.bak
