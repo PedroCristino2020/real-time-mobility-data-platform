@@ -31,7 +31,15 @@ def upload_silver_json():
 
 
 def upload_silver_parquet():
-    """Upload all date-partitioned Silver Parquet files to Silo."""
+    """Upload all Silver Parquet datasets to Silo."""
+    stations_parquet = SILVER_DIR / "stations" / "stations.parquet"
+
+    if stations_parquet.is_file():
+        upload_file(
+            stations_parquet,
+            "silver/bicimad/stations/stations.parquet",
+        )
+
     parquet_files = sorted(SILVER_DIR.glob("station_status/date=*/*.parquet"))
 
     if not parquet_files:

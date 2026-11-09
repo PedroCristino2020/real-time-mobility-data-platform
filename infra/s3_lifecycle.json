@@ -1,0 +1,60 @@
+{
+  "Rules": [
+    {
+      "ID": "transition-raw-to-infrequent-access",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "raw/"
+      },
+      "Transitions": [
+        {
+          "Days": 30,
+          "StorageClass": "STANDARD_IA"
+        },
+        {
+          "Days": 90,
+          "StorageClass": "GLACIER_IR"
+        }
+      ]
+    },
+    {
+      "ID": "expire-raw-status-snapshots",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "raw/bicimad/station_status/"
+      },
+      "Expiration": {
+        "Days": 365
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 30
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    },
+    {
+      "ID": "expire-athena-query-results",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "athena-results/"
+      },
+      "Expiration": {
+        "Days": 30
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    },
+    {
+      "ID": "expire-quality-metrics-history",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "gold/bicimad/quality_metrics/"
+      },
+      "Expiration": {
+        "Days": 180
+      }
+    }
+  ]
+}

@@ -26,6 +26,10 @@ data/
 *.json
 *.parquet
 
+# Committed configuration artifacts
+!config/datasets.json
+!infra/s3_lifecycle.json
+
 # Logs
 *.log
 

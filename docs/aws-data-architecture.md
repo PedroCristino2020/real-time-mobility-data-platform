@@ -6,7 +6,7 @@ This document defines the proposed cloud storage and analytical architecture for
 
 The objective is to extend the existing local BiciMAD pipeline with cloud storage and serverless SQL analytics while preserving the current local development workflow.
 
-**Implementation status:** This document describes the target architecture. AWS S3, Glue Data Catalog and Athena integration are planned and are not considered implemented until deployed and tested.
+**Implementation status:** The local pipeline, S3-compatible storage, dataset manifests, quality metrics, Athena DDL, S3 lifecycle policy and Iceberg design are implemented. The AWS deployment (real S3 bucket, Glue Data Catalog, Athena queries and Iceberg table) is planned and is not considered implemented until deployed and tested in an AWS account.
 
 ## 2. Architecture Overview
 
@@ -74,16 +74,23 @@ s3://<bucket-name>/
 ├── silver/
 │   └── bicimad/
 │       ├── stations/
-│       │   └── *.parquet
+│       │   └── stations.parquet
 │       └── station_status/
-│           └── year=YYYY/
-│               └── month=MM/
-│                   └── day=DD/
-│                       └── *.parquet
-└── gold/
-    └── bicimad/
-        └── station_availability/
-            └── *.parquet
+│           └── date=YYYY-MM-DD/
+│               └── *.parquet
+├── gold/
+│   └── bicimad/
+│       ├── station_availability_spark/
+│       │   └── *.parquet
+│       └── quality_metrics/
+│           ├── latest.json
+│           ├── quality_summary.parquet
+│           ├── column_completeness.parquet
+│           └── rule_issues.parquet
+├── _metadata/
+│   ├── catalog.json
+│   └── <dataset>.json
+└── athena-results/
 ```
 
 `<bucket-name>` is a placeholder and must be replaced with the actual S3 bucket name.
@@ -106,13 +113,11 @@ The Gold layer contains station-level analytical metrics calculated by PySpark. 
 
 ## 4. Partitioning Strategy
 
-The initial partitioning strategy for historical station status data is:
+The partitioning strategy for historical station status data is:
 
 | Partition column | Example | Purpose |
 |---|---|---|
-| `year` | `2026` | Filter by year |
-| `month` | `10` | Filter by month |
-| `day` | `19` | Filter by day |
+| `date` | `2026-10-19` | Filter by snapshot day |
 
 Partition values are derived from the snapshot timestamp, not from the upload time.
 
@@ -129,12 +134,14 @@ The initial logical tables are:
 | Proposed table | Dataset | Format |
 |---|---|---|
 | `bicimad_stations` | Silver station metadata | Parquet |
-| `bicimad_station_status` | Historical station status | Parquet |
+| `bicimad_station_status` | Historical station status | Parquet, partitioned by `date` |
 | `bicimad_station_availability` | Gold station-level metrics | Parquet |
+| `bicimad_quality_summary` | Gold quality summary | Parquet |
+| `bicimad_column_completeness` | Gold per-column completeness | Parquet |
 
-These are proposed table names. Their schemas, S3 locations and partition definitions must match the actual datasets before the tables are created.
+The DDL for the first three tables lives in `sql/athena/`. The quality tables can be registered with the same external-table pattern.
 
-For the partitioned station status table, the catalog must expose the `year`, `month` and `day` partition columns consistently with the S3 object paths.
+For the partitioned station status table, the catalog must expose the `date` partition column consistently with the S3 object paths (`date=YYYY-MM-DD`).
 
 ## 6. Amazon Athena
 
@@ -152,10 +159,9 @@ Example query, assuming the catalog table and column names have been confirmed:
 ```sql
 SELECT
     station_id,
-    AVG(available_bikes) AS avg_available_bikes
+    AVG(num_bikes_available) AS avg_available_bikes
 FROM bicimad_station_status
-WHERE year = '2026'
-  AND month = '10'
+WHERE date BETWEEN '2026-10-01' AND '2026-10-19'
 GROUP BY station_id
 ORDER BY avg_available_bikes DESC;
 ```
@@ -192,6 +198,15 @@ The local pipeline and automated tests must continue to work without requiring A
 
 ## 9. Current Status
 
-The local project already includes BiciMAD ingestion, Raw and Silver processing, data quality checks, Parquet generation, PySpark analytics, automated tests and CI checks.
+The local project includes BiciMAD ingestion, Raw and Silver processing, data quality checks, extended quality metrics, Parquet generation, PySpark analytics, dataset manifests, automated tests and CI checks.
 
-The S3, Glue Data Catalog and Athena components described here are planned extensions. Their implementation status will be updated after each component has been deployed and verified.
+The following artifacts are implemented and validated locally:
+
+- S3 layout and naming convention (`docs/s3_layout.md`, `config/datasets.json`).
+- S3 lifecycle policy (`infra/s3_lifecycle.json`).
+- Glue/Athena DDL (`sql/athena/*.sql`).
+- Athena query guide (`docs/athena_queries.md`).
+- Iceberg design (`docs/iceberg_design.md`) and local Hadoop-catalog example (`spark/iceberg_write_example.py`).
+- DuckDB local validation (`sql/duckdb/station_queries.sql`).
+
+The real S3 bucket, Glue Data Catalog and Athena deployment remain planned. Their implementation status will be updated after each component has been deployed and verified in an AWS account.

@@ -1,0 +1,122 @@
+{
+  "version": "1.0",
+  "project": "real-time-mobility-data-platform",
+  "owner": "Pedro Cristino Moreno",
+  "bucket": "mobility-data",
+  "naming": {
+    "layers": ["raw", "silver", "gold"],
+    "dataset_pattern": "{layer}/bicimad/{dataset}",
+    "partition_pattern": "date=YYYY-MM-DD",
+    "metadata_prefix": "_metadata",
+    "quality_metrics_prefix": "gold/bicimad/quality_metrics"
+  },
+  "tags": {
+    "project": "bicimad-mobility",
+    "environment": "local",
+    "data_classification": "public",
+    "managed_by": "python-pipeline"
+  },
+  "datasets": [
+    {
+      "name": "raw_station_information",
+      "layer": "raw",
+      "path": "data/raw/bicimad/station_information.json",
+      "format": "json",
+      "record_unit": "rows",
+      "source": "BiciMAD GBFS station_information feed",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 10080,
+      "partition_columns": [],
+      "tags": {
+        "update_frequency": "weekly"
+      }
+    },
+    {
+      "name": "raw_station_status",
+      "layer": "raw",
+      "path": "data/raw/bicimad/station_status",
+      "format": "json",
+      "record_unit": "files",
+      "source": "BiciMAD GBFS station_status feed",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 15,
+      "partition_columns": [],
+      "tags": {
+        "update_frequency": "5-minutes"
+      }
+    },
+    {
+      "name": "silver_stations",
+      "layer": "silver",
+      "path": "data/silver/bicimad/stations.json",
+      "format": "json",
+      "record_unit": "rows",
+      "source": "BiciMAD GBFS station_information feed",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 10080,
+      "partition_columns": [],
+      "tags": {
+        "update_frequency": "weekly"
+      }
+    },
+    {
+      "name": "silver_stations_parquet",
+      "layer": "silver",
+      "path": "data/silver/bicimad/stations",
+      "format": "parquet",
+      "record_unit": "rows",
+      "source": "BiciMAD GBFS station_information feed",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 10080,
+      "partition_columns": [],
+      "tags": {
+        "update_frequency": "weekly",
+        "consumer": "athena"
+      }
+    },
+    {
+      "name": "silver_station_status",
+      "layer": "silver",
+      "path": "data/silver/bicimad/station_status",
+      "format": "parquet",
+      "record_unit": "rows",
+      "source": "BiciMAD GBFS station_status feed",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 15,
+      "partition_columns": ["date"],
+      "tags": {
+        "update_frequency": "5-minutes"
+      }
+    },
+    {
+      "name": "gold_station_availability",
+      "layer": "gold",
+      "path": "data/gold/bicimad/station_availability_spark",
+      "format": "parquet",
+      "record_unit": "rows",
+      "source": "PySpark aggregation of silver_station_status",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 15,
+      "partition_columns": [],
+      "tags": {
+        "update_frequency": "5-minutes",
+        "consumer": "analytics"
+      }
+    },
+    {
+      "name": "gold_quality_metrics",
+      "layer": "gold",
+      "path": "data/gold/quality_metrics",
+      "format": "mixed",
+      "record_unit": "files",
+      "source": "governance.quality_metrics",
+      "schema_version": "1.0",
+      "freshness_sla_minutes": 15,
+      "partition_columns": [],
+      "tags": {
+        "update_frequency": "5-minutes",
+        "consumer": "data-governance"
+      }
+    }
+  ]
+}

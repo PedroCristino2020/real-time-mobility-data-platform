@@ -3,13 +3,21 @@ import logging
 import time
 
 from etl.bicimad_quality_report import main as run_quality_report
+from etl.bicimad_stations_to_parquet import main as convert_stations_to_parquet
 from etl.bicimad_status_transform import main as transform_status
 from etl.bicimad_to_parquet import main as convert_to_parquet
 from etl.bicimad_transform import main as transform_stations
+from etl.s3_quality_upload import main as upload_quality_metrics
 from etl.s3_silver_upload import (
     upload_silver_json,
     upload_silver_parquet,
 )
+from governance.dataset_metadata import (
+    build_catalog,
+    upload_manifests,
+    write_manifests,
+)
+from governance.quality_metrics import run as run_quality_metrics
 from ingestion.bicimad_ingestion import main as ingest
 from spark.bicimad_processing import main as process_gold
 from spark.s3_gold_upload import main as upload_gold
@@ -31,11 +39,18 @@ def run_once():
     logger.info("=== 2. Transform station information ===")
     transform_stations()
 
-    logger.info("=== 3. Transform station status ===")
+    logger.info("=== 3. Convert station metadata to Parquet ===")
+    convert_stations_to_parquet()
+
+    logger.info("=== 4. Transform station status ===")
     transform_status()
 
-    logger.info("=== 4. Data quality ===")
+    logger.info("=== 5. Data quality ===")
     total_issues = run_quality_report()
+
+    logger.info("=== 6. Quality metrics (schema, completeness, freshness) ===")
+    metrics = run_quality_metrics()
+    logger.info("Quality gate passed: %s", metrics["passed"])
 
     if total_issues is None:
         raise RuntimeError(
@@ -47,18 +62,34 @@ def run_once():
             f"Pipeline stopped: {total_issues} data quality issues found."
         )
 
-    logger.info("=== 5. Convert Silver data to Parquet ===")
+    logger.info("=== 7. Convert Silver data to Parquet ===")
     convert_to_parquet()
 
-    logger.info("=== 6. Upload Silver datasets ===")
+    logger.info("=== 8. Upload Silver datasets ===")
     upload_silver_json()
     upload_silver_parquet()
 
-    logger.info("=== 7. Generate Gold dataset with Spark ===")
+    logger.info("=== 9. Generate Gold dataset with Spark ===")
     process_gold()
 
-    logger.info("=== 8. Upload Gold dataset ===")
+    logger.info("=== 10. Upload Gold dataset ===")
     upload_gold()
+
+    logger.info("=== 11. Upload quality metrics ===")
+    upload_quality_metrics()
+
+    logger.info("=== 12. Refresh dataset manifests ===")
+    catalog = build_catalog()
+    write_manifests(catalog)
+    upload_manifests()
+
+    for manifest in catalog["datasets"]:
+        logger.info(
+            "%s: %s records, %s partitions",
+            manifest["dataset"],
+            manifest["row_count"],
+            len(manifest["partitions"]),
+        )
 
     logger.info("Pipeline completed successfully.")
 
